@@ -17,7 +17,7 @@
 #include "font5x7.h"
 
 #define FRAME_LENGTH        500000000L  // ns
-#define NSEC_PER_SEC       1000000000L
+#define NSEC_PER_SEC       1000000000L 
 
 static const unsigned char block8x8_patterns[5][8] = {
 	{0, 0x7E, 0x7C, 0x78, 0x70, 0x60, 0x40, 0},    // big triangle
