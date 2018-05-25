@@ -2,6 +2,7 @@
  * Copyright (c) 2018, Dennis Fleurbaaij
  * MIT License
  *
+ * This is code is meant for an orangepi with a Dallas Instruments i2c<->onewire chip and ssd1306 attached.
  * Shows the state of the machine (IP, CPU temp) and the onewire sensors (Temp of first temp sensor)
  */
 
