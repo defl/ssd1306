@@ -2,7 +2,6 @@
  * Copyright (c) 2018, Dennis Fleurbaaij
  * MIT License
  *
- * This is code is meant for an orangepi with a Dallas Instruments i2c<->onewire chip and ssd1306 attached.
  * Shows the state of the machine (IP, CPU temp) and the onewire sensors (Temp of first temp sensor)
  */
 
@@ -63,7 +62,7 @@ size_t get_file_contents(char* file_name, char* buffer, int n)
 	return bytes_read;
 }
 
-// Get CPU temp, return as double.
+// Get CPU temp as double.
 double get_cpu_temp()
 {
 	char buf[10]; // 5 numbers used
@@ -74,6 +73,33 @@ double get_cpu_temp()
 	}
 	
 	return temp / 1000.0;
+}
+
+// Get amount of OWFS sensors
+int owfs_sensor_count()
+{
+	int count = 0;
+	
+	struct dirent *dir;
+	DIR *d = opendir(OWFS_ROOT);
+	if (d) {
+		while ((dir = readdir(d)) != NULL) {
+			
+			if (dir->d_type != DT_DIR)
+				continue;
+			
+			if (strlen(dir->d_name) != 15)
+				continue;
+			
+			if (dir->d_name[2] != '.')
+				continue;
+			
+			++count;
+		}
+		closedir(d);
+    }
+	
+	return count;	
 }
 
 // Get temp of first found OWFS temp sensor at index. Returns > 0 if found.
@@ -93,6 +119,7 @@ int get_first_owfs_temp(char* sensor_name, double* temp)
 			if (strncmp(dir->d_name, "28.", 3) == 0) {
 				
 				memcpy(sensor_name, dir->d_name, strlen(dir->d_name));
+				sensor_name[strlen(dir->d_name)] = 0;
 				
 				snprintf(file_name_buf, sizeof(file_name_buf), "%s/%s/temperature", OWFS_ROOT, dir->d_name);
 				
@@ -131,13 +158,21 @@ int write_str(struct display_info* disp, int offset, char* s)
 	return offset;
 }
 
+int write_formatted(struct display_info* disp, int offset, char* buf, char* fmt, ...) 
+{
+	va_list va;
+    va_start(va, fmt);
+    vsprintf(buf, fmt, va);
+    va_end (va);
+}
+
 // Main loop
 int ssd1306_machine_state(struct display_info* disp)
 {
 	struct timespec t;
 	int status = 0, cycle = 0, step = 0, offset;
+	char line_buffer[32]; // Too big, don't care
 	struct sized_array payload;
-	char str[50];
 
 	while (1) {
 		
@@ -156,21 +191,24 @@ int ssd1306_machine_state(struct display_info* disp)
 		memset(disp->buffer, 0, sizeof(disp->buffer));
 		offset = 0;
 		
+		write_str(disp, 0, "   === 1wire server === ");
+		
 		char ip_str[16];
 		get_ip(ETHERNET_INTERFACE_NAME, &ip_str[0]);
-		offset = write_str(disp, offset, "IP  : ");
+		offset = write_str(disp, 256, "IP  : ");
 		offset = write_str(disp, offset, &ip_str[0]);
 		
-		double cpu_temp = get_cpu_temp();
-		sprintf(str, "Temp: %.1f", cpu_temp);
-		write_str(disp, 128, str);
+		snprintf(line_buffer, sizeof(line_buffer), "Temp: %.1f", get_cpu_temp());
+		write_str(disp, 384, line_buffer);
 		
-		write_str(disp, 256, "OWFS:");
+		snprintf(line_buffer, sizeof(line_buffer), "OWFS: %i sensors", owfs_sensor_count());
+		write_str(disp, 512, line_buffer);
+		
 		char sensor_name[32];
 		double owfs_temp;
 		if(get_first_owfs_temp(&sensor_name[0], &owfs_temp) > 0) {
-			sprintf(str, " %s: %.1f", sensor_name, owfs_temp);
-			write_str(disp, 384, str);
+			snprintf(line_buffer, sizeof(line_buffer), " %s: %.1f", sensor_name, owfs_temp);
+			write_str(disp, 640, line_buffer);
 		}
 		
 		// Flush buffer
