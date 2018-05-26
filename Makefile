@@ -1,23 +1,19 @@
-CROSS_COMPILE = arm-linux-gnueabihf-
+src = $(wildcard *.c)
+obj = $(src:.c=.o)
 
-CC       = $(CROSS_COMPILE)gcc
-LD       = $(CROSS_COMPILE)gcc
-AS       = $(CROSS_COMPILE)as
-AR       = $(CROSS_COMPILE)ar
-OBJCOPY  = $(CROSS_COMPILE)objcopy
-OBJDUMP  = $(CROSS_COMPILE)objdump
-STRIP    = $(CROSS_COMPILE)strip
-NM       = $(CROSS_COMPILE)nm
-
-CFLAGS=-I/usr/include/glib-2.0 -I/usr/lib/arm-linux-gnueabihf/glib-2.0/include -std=c11
+CFLAGS=`pkg-config --cflags glib-2.0` -std=c11
 CFLAGS+=-D_POSIX_C_SOURCE=200809L -D_DEFAULT_SOURCE
 
-LDFLAGS=-lglib-2.0 -L/usr/lib/arm-linux-gnueabihf
-
-all: ssd1306_machine_state
-
-ssd1306_machine_state: ssd1306_machine_state.o ssd1306.o
-	$(LD) $(LDFLAGS) -o $@ $^
+LDFLAGS=`pkg-config --libs glib-2.0`
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
+
+all: onewire_server_state_display
+
+onewire_server_state_display: $(obj)
+	$(CC) -o $@ $^ $(LDFLAGS)
+
+.PHONY: clean
+clean:
+	rm -f $(obj) onewire_server_state_display

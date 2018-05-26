@@ -1,3 +1,2 @@
 *.o
-ssd1306_demo
-ssd1306_machine_state
+onewire_server_state_display
