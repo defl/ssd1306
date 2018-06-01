@@ -11,6 +11,9 @@ LDFLAGS=`pkg-config --libs glib-2.0`
 
 all: onewire_server_state_display
 
+install: onewire_server_state_display
+	install -m 755 onewire_server_state_display $(DESTDIR)/bin/
+
 onewire_server_state_display: $(obj)
 	$(CC) -o $@ $^ $(LDFLAGS)
 

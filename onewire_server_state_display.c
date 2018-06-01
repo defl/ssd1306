@@ -28,7 +28,7 @@
 #define NSEC_PER_SEC    1000000000L 
 
 #define ETHERNET_INTERFACE_NAME "eth0"
-#define OWFS_ROOT "/mnt/owfs"
+#define OWFS_ROOT "/mnt/1wire"
 
 //
 // Data gathering

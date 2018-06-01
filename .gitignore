@@ -1,2 +1,4 @@
 *.o
 onewire_server_state_display
+*.swp
+*~
